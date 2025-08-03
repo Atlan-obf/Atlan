@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# AI Assistant Build Script
-# Automaticky kompiluje AI Assistant aplikáciu
+# AI Assistant Build Script (GTK4 Version)
+# Automaticky kompiluje AI Assistant aplikáciu s GTK4
 
 set -e  # Exit on any error
 
@@ -70,15 +70,39 @@ check_dependencies() {
     
     print_status "Compiler: $COMPILER_VERSION"
     
-    # Check Qt6
-    if command -v qmake6 &> /dev/null; then
-        QT_VERSION=$(qmake6 --version | grep "Using Qt version" | cut -d" " -f4)
-        print_status "Qt version: $QT_VERSION"
-    elif command -v qmake &> /dev/null; then
-        QT_VERSION=$(qmake --version | grep "Using Qt version" | cut -d" " -f4)
-        print_status "Qt version: $QT_VERSION"
+    # Check GTK4 and gtkmm4
+    if command -v pkg-config &> /dev/null; then
+        if pkg-config --exists gtk4; then
+            GTK_VERSION=$(pkg-config --modversion gtk4)
+            print_status "GTK4 version: $GTK_VERSION"
+        else
+            print_warning "GTK4 not found via pkg-config"
+        fi
+        
+        if pkg-config --exists gtkmm-4.0; then
+            GTKMM_VERSION=$(pkg-config --modversion gtkmm-4.0)
+            print_status "gtkmm4 version: $GTKMM_VERSION"
+        else
+            print_warning "gtkmm-4.0 not found via pkg-config"
+        fi
     else
-        print_warning "qmake not found in PATH. Qt6 may not be properly installed."
+        print_warning "pkg-config not found. Cannot check GTK4/gtkmm4 versions."
+    fi
+    
+    # Check libcurl
+    if pkg-config --exists libcurl; then
+        CURL_VERSION=$(pkg-config --modversion libcurl)
+        print_status "libcurl version: $CURL_VERSION"
+    else
+        print_warning "libcurl not found via pkg-config"
+    fi
+    
+    # Check jsoncpp
+    if pkg-config --exists jsoncpp; then
+        JSON_VERSION=$(pkg-config --modversion jsoncpp)
+        print_status "jsoncpp version: $JSON_VERSION"
+    else
+        print_warning "jsoncpp not found via pkg-config"
     fi
 }
 
@@ -91,32 +115,49 @@ install_dependencies() {
             if command -v apt &> /dev/null; then
                 print_status "Using apt package manager..."
                 sudo apt update
-                sudo apt install -y build-essential cmake git
-                sudo apt install -y qt6-base-dev qt6-tools-dev libcurl4-openssl-dev
+                sudo apt install -y build-essential cmake git pkg-config
+                sudo apt install -y libgtk-4-dev libgtkmm-4.0-dev
+                sudo apt install -y libcurl4-openssl-dev libjsoncpp-dev
             elif command -v yum &> /dev/null; then
                 print_status "Using yum package manager..."
-                sudo yum install -y gcc-c++ cmake git
-                sudo yum install -y qt6-qtbase-devel libcurl-devel
+                sudo yum install -y gcc-c++ cmake git pkgconfig
+                sudo yum install -y gtk4-devel gtkmm4-devel
+                sudo yum install -y libcurl-devel jsoncpp-devel
             elif command -v pacman &> /dev/null; then
                 print_status "Using pacman package manager..."
-                sudo pacman -S --noconfirm gcc cmake git
-                sudo pacman -S --noconfirm qt6-base curl
+                sudo pacman -S --noconfirm gcc cmake git pkgconf
+                sudo pacman -S --noconfirm gtk4 gtkmm-4.0
+                sudo pacman -S --noconfirm curl jsoncpp
+            elif command -v dnf &> /dev/null; then
+                print_status "Using dnf package manager..."
+                sudo dnf install -y gcc-c++ cmake git pkgconfig
+                sudo dnf install -y gtk4-devel gtkmm40-devel
+                sudo dnf install -y libcurl-devel jsoncpp-devel
             else
-                print_warning "Unknown package manager. Please install dependencies manually."
+                print_warning "Unknown package manager. Please install dependencies manually:"
+                print_status "Required packages: build-essential cmake git pkg-config"
+                print_status "GTK4: libgtk-4-dev libgtkmm-4.0-dev"
+                print_status "Other: libcurl4-openssl-dev libjsoncpp-dev"
             fi
             ;;
         "macos")
             if command -v brew &> /dev/null; then
                 print_status "Using Homebrew..."
-                brew install cmake qt6 curl
+                brew install cmake pkg-config
+                brew install gtk4 gtkmm4
+                brew install curl jsoncpp
             else
-                print_error "Homebrew not found. Please install it first or install dependencies manually."
+                print_error "Homebrew not found. Please install it first:"
+                print_status "/bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
                 exit 1
             fi
             ;;
         "windows")
             print_warning "On Windows, please ensure you have MSYS2 with required packages installed."
-            print_status "Run: pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-qt6 mingw-w64-x86_64-curl"
+            print_status "Run these commands in MSYS2:"
+            print_status "pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake"
+            print_status "pacman -S mingw-w64-x86_64-gtk4 mingw-w64-x86_64-gtkmm4"
+            print_status "pacman -S mingw-w64-x86_64-curl mingw-w64-x86_64-jsoncpp"
             ;;
         *)
             print_error "Unsupported OS: $OS"
@@ -207,6 +248,12 @@ post_build() {
             SIZE=$(du -h "$EXECUTABLE" | cut -f1)
             print_status "Executable size: $SIZE"
         fi
+        
+        # Check dependencies
+        if [[ "$OS" == "linux" ]] && command -v ldd &> /dev/null; then
+            print_status "Checking dynamic dependencies..."
+            ldd "$EXECUTABLE" | grep -E "(gtk|gtkmm|curl|json)" | head -5
+        fi
     else
         print_error "Executable not found after build"
         exit 1
@@ -227,16 +274,22 @@ run_application() {
 
 # Show usage
 show_usage() {
-    echo "AI Assistant Build Script"
+    echo "AI Assistant Build Script (GTK4 Version)"
     echo ""
     echo "Usage: $0 [options]"
     echo ""
     echo "Options:"
     echo "  --help          Show this help message"
-    echo "  --install-deps  Install system dependencies"
+    echo "  --install-deps  Install system dependencies (GTK4, gtkmm4, etc.)"
     echo "  --clean         Clean build directory before building"
     echo "  --run           Run the application after building"
     echo "  --debug         Build in debug mode"
+    echo ""
+    echo "Dependencies:"
+    echo "  - GTK4 and gtkmm4 (GUI framework)"
+    echo "  - libcurl (HTTP requests)"
+    echo "  - jsoncpp (JSON parsing)"
+    echo "  - CMake 3.16+ and C++17 compiler"
     echo ""
     echo "Examples:"
     echo "  $0                    # Build the project"
@@ -246,7 +299,7 @@ show_usage() {
 
 # Main function
 main() {
-    print_status "AI Assistant Build Script Starting..."
+    print_status "AI Assistant Build Script (GTK4 Version) Starting..."
     
     # Parse command line arguments
     INSTALL_DEPS=false
@@ -314,6 +367,7 @@ main() {
     
     print_success "Build completed successfully!"
     print_status "Executable location: build/AIAssistant"
+    print_status "This version uses GTK4 instead of Qt6 - completely free and open source!"
     
     # Run if requested
     if [ "$RUN" = true ]; then

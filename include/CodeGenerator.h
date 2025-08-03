@@ -1,105 +1,115 @@
 #ifndef CODEGENERATOR_H
 #define CODEGENERATOR_H
 
-#include <QtCore/QObject>
-#include <QtCore/QString>
-#include <QtCore/QStringList>
-#include <QtCore/QMap>
-#include <QtCore/QVector>
-#include <QtCore/QRegularExpression>
+#include <string>
+#include <vector>
+#include <map>
+#include <memory>
+#include <functional>
+#include <regex>
 
 struct CodeTemplate {
-    QString language;
-    QString pattern;
-    QString template_code;
-    QStringList variables;
-    QString description;
+    std::string language;
+    std::string pattern;
+    std::string template_code;
+    std::vector<std::string> variables;
+    std::string description;
 };
 
 struct GeneratedCode {
-    QString code;
-    QString language;
-    QString description;
-    QStringList dependencies;
+    std::string code;
+    std::string language;
+    std::string description;
+    std::vector<std::string> dependencies;
     double confidence;
-    bool isValid;
+    bool is_valid;
 };
 
-class CodeGenerator : public QObject
+class CodeGenerator
 {
-    Q_OBJECT
-
 public:
-    explicit CodeGenerator(QObject *parent = nullptr);
+    // Callback types
+    using CodeCallback = std::function<void(const GeneratedCode&)>;
+    using ValidationCallback = std::function<void(bool, const std::string&)>;
+    using OptimizationCallback = std::function<void(const std::string&)>;
+    using ProgressCallback = std::function<void(int)>;
+
+    explicit CodeGenerator();
     ~CodeGenerator();
     
+    // Callback setters
+    void set_code_callback(CodeCallback callback);
+    void set_validation_callback(ValidationCallback callback);
+    void set_optimization_callback(OptimizationCallback callback);
+    void set_progress_callback(ProgressCallback callback);
+    
     // Code generation
-    GeneratedCode generateCode(const QString &description, const QString &language = "cpp");
-    QString generateFunction(const QString &functionName, const QString &description, 
-                           const QStringList &parameters, const QString &returnType);
-    QString generateClass(const QString &className, const QString &description,
-                         const QStringList &methods, const QStringList &members);
+    GeneratedCode generate_code(const std::string &description, const std::string &language = "cpp");
+    std::string generate_function(const std::string &function_name, const std::string &description, 
+                                 const std::vector<std::string> &parameters, const std::string &return_type);
+    std::string generate_class(const std::string &class_name, const std::string &description,
+                              const std::vector<std::string> &methods, const std::vector<std::string> &members);
     
     // Template management
-    void addTemplate(const CodeTemplate &template_obj);
-    void loadTemplates(const QString &filePath);
-    void saveTemplates(const QString &filePath);
+    void add_template(const CodeTemplate &template_obj);
+    void load_templates(const std::string &file_path);
+    void save_templates(const std::string &file_path);
     
     // Code analysis
-    bool validateSyntax(const QString &code, const QString &language);
-    QStringList extractFunctions(const QString &code);
-    QStringList extractClasses(const QString &code);
-    QStringList findDependencies(const QString &code, const QString &language);
+    bool validate_syntax(const std::string &code, const std::string &language);
+    std::vector<std::string> extract_functions(const std::string &code);
+    std::vector<std::string> extract_classes(const std::string &code);
+    std::vector<std::string> find_dependencies(const std::string &code, const std::string &language);
     
     // Learning from code
-    void learnFromCode(const QString &code, const QString &description);
-    void analyzeCodePatterns(const QString &code);
+    void learn_from_code(const std::string &code, const std::string &description);
+    void analyze_code_patterns(const std::string &code);
     
     // Code optimization
-    QString optimizeCode(const QString &code, const QString &language);
-    QString addComments(const QString &code, const QString &language);
-    QString formatCode(const QString &code, const QString &language);
-
-signals:
-    void codeGenerated(const GeneratedCode &code);
-    void validationComplete(bool isValid, const QString &errors);
-    void optimizationComplete(const QString &optimizedCode);
-    void learningProgressUpdated(int progress);
+    std::string optimize_code(const std::string &code, const std::string &language);
+    std::string add_comments(const std::string &code, const std::string &language);
+    std::string format_code(const std::string &code, const std::string &language);
 
 private:
-    void initializeTemplates();
-    void setupLanguagePatterns();
+    void initialize_templates();
+    void setup_language_patterns();
     
-    CodeTemplate findBestTemplate(const QString &description, const QString &language);
-    QString fillTemplate(const CodeTemplate &template_obj, const QString &description);
-    QMap<QString, QString> extractVariables(const QString &description);
+    CodeTemplate find_best_template(const std::string &description, const std::string &language);
+    std::string fill_template(const CodeTemplate &template_obj, const std::string &description);
+    std::map<std::string, std::string> extract_variables(const std::string &description);
     
     // Language-specific generators
-    QString generateCppCode(const QString &description);
-    QString generatePythonCode(const QString &description);
-    QString generateJavaScriptCode(const QString &description);
-    QString generateJavaCode(const QString &description);
+    std::string generate_cpp_code(const std::string &description);
+    std::string generate_python_code(const std::string &description);
+    std::string generate_javascript_code(const std::string &description);
+    std::string generate_java_code(const std::string &description);
     
     // Syntax validation
-    bool validateCppSyntax(const QString &code);
-    bool validatePythonSyntax(const QString &code);
-    bool validateJavaScriptSyntax(const QString &code);
+    bool validate_cpp_syntax(const std::string &code);
+    bool validate_python_syntax(const std::string &code);
+    bool validate_javascript_syntax(const std::string &code);
     
     // Pattern recognition
-    QStringList identifyPatterns(const QString &description);
-    QString matchPattern(const QString &pattern, const QString &description);
+    std::vector<std::string> identify_patterns(const std::string &description);
+    std::string match_pattern(const std::string &pattern, const std::string &description);
     
-    QVector<CodeTemplate> templates;
-    QMap<QString, QStringList> languageKeywords;
-    QMap<QString, QRegularExpression> syntaxPatterns;
-    QMap<QString, QStringList> commonPatterns;
+    std::vector<CodeTemplate> templates;
+    std::map<std::string, std::vector<std::string>> language_keywords;
+    std::map<std::string, std::regex> syntax_patterns;
+    std::map<std::string, std::vector<std::string>> common_patterns;
     
     // Learning data
-    QMap<QString, QStringList> learnedPatterns;
-    QMap<QString, QString> codeExamples;
-    QMap<QString, double> patternConfidence;
+    std::map<std::string, std::vector<std::string>> learned_patterns;
+    std::map<std::string, std::string> code_examples;
+    std::map<std::string, double> pattern_confidence;
     
-    int learningProgress;
+    // Callbacks
+    CodeCallback code_callback;
+    ValidationCallback validation_callback;
+    OptimizationCallback optimization_callback;
+    ProgressCallback progress_callback;
+    
+    int learning_progress;
 };
 
 #endif // CODEGENERATOR_H

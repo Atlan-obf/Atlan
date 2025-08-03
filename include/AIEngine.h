@@ -1,104 +1,127 @@
 #ifndef AIENGINE_H
 #define AIENGINE_H
 
-#include <QtCore/QObject>
-#include <QtCore/QString>
-#include <QtCore/QStringList>
-#include <QtCore/QMap>
-#include <QtCore/QVector>
-#include <QtCore/QTimer>
-#include <QtCore/QThread>
+#include <string>
+#include <vector>
+#include <map>
 #include <memory>
+#include <functional>
+#include <thread>
+#include <mutex>
+#include <atomic>
+#include <chrono>
 
 class NetworkManager;
 class LearningModule;
 
 struct ConversationContext {
-    QStringList messages;
-    QStringList responses;
-    QString currentTopic;
-    int contextLength;
+    std::vector<std::string> messages;
+    std::vector<std::string> responses;
+    std::string current_topic;
+    int context_length;
 };
 
 struct KnowledgeBase {
-    QMap<QString, QString> facts;
-    QMap<QString, QStringList> patterns;
-    QMap<QString, double> confidence;
-    QStringList codeExamples;
+    std::map<std::string, std::string> facts;
+    std::map<std::string, std::vector<std::string>> patterns;
+    std::map<std::string, double> confidence;
+    std::vector<std::string> code_examples;
 };
 
-class AIEngine : public QObject
+class AIEngine
 {
-    Q_OBJECT
-
 public:
-    explicit AIEngine(QObject *parent = nullptr);
+    // Callback types
+    using ResponseCallback = std::function<void(const std::string&)>;
+    using ProgressCallback = std::function<void(int)>;
+    using StatusCallback = std::function<void(const std::string&)>;
+    using CodeCallback = std::function<void(const std::string&)>;
+    using ErrorCallback = std::function<void(const std::string&)>;
+
+    explicit AIEngine();
     ~AIEngine();
     
     void initialize();
-    void processMessage(const QString &message);
-    void setNetworkManager(NetworkManager *manager);
-    void setLearningModule(LearningModule *module);
+    void process_message(const std::string &message);
+    void set_network_manager(std::shared_ptr<NetworkManager> manager);
+    void set_learning_module(std::shared_ptr<LearningModule> module);
+    
+    // Callback setters
+    void set_response_callback(ResponseCallback callback);
+    void set_progress_callback(ProgressCallback callback);
+    void set_status_callback(StatusCallback callback);
+    void set_code_callback(CodeCallback callback);
+    void set_error_callback(ErrorCallback callback);
     
     // Learning methods
-    void learnFromInteraction(const QString &input, const QString &output);
-    void updateKnowledgeBase(const QString &topic, const QString &information);
-    QString generateResponse(const QString &input);
+    void learn_from_interaction(const std::string &input, const std::string &output);
+    void update_knowledge_base(const std::string &topic, const std::string &information);
+    std::string generate_response(const std::string &input);
     
     // Code generation
-    QString generateCode(const QString &description, const QString &language = "cpp");
-    bool validateCode(const QString &code, const QString &language);
+    std::string generate_code(const std::string &description, const std::string &language = "cpp");
+    bool validate_code(const std::string &code, const std::string &language);
     
     // Context management
-    void addToContext(const QString &message, const QString &response);
-    void clearContext();
-    QString getContextSummary();
-
-signals:
-    void responseReady(const QString &response);
-    void learningProgressUpdated(int progress);
-    void statusChanged(const QString &status);
-    void codeGenerated(const QString &code);
-    void errorOccurred(const QString &error);
-
-private slots:
-    void processNetworkResponse(const QString &response);
-    void onLearningUpdate();
+    void add_to_context(const std::string &message, const std::string &response);
+    void clear_context();
+    std::string get_context_summary();
 
 private:
-    void initializeKnowledgeBase();
-    void saveKnowledgeBase();
-    void loadKnowledgeBase();
+    void process_network_response(const std::string &response);
+    void on_learning_update();
     
-    QString analyzeInput(const QString &input);
-    QString findBestResponse(const QString &input);
-    double calculateConfidence(const QString &input, const QString &response);
+    void initialize_knowledge_base();
+    void save_knowledge_base();
+    void load_knowledge_base();
     
-    QStringList tokenize(const QString &text);
-    QString preprocessText(const QString &text);
+    std::string analyze_input(const std::string &input);
+    std::string find_best_response(const std::string &input);
+    double calculate_confidence(const std::string &input, const std::string &response);
     
-    NetworkManager *networkManager;
-    LearningModule *learningModule;
+    std::vector<std::string> tokenize(const std::string &text);
+    std::string preprocess_text(const std::string &text);
+    
+    std::shared_ptr<NetworkManager> network_manager;
+    std::shared_ptr<LearningModule> learning_module;
     
     ConversationContext context;
-    KnowledgeBase knowledgeBase;
+    KnowledgeBase knowledge_base;
     
-    QTimer *learningTimer;
-    QString currentQuery;
-    bool isProcessing;
+    std::string current_query;
+    std::atomic<bool> is_processing{false};
+    
+    // Callbacks
+    ResponseCallback response_callback;
+    ProgressCallback progress_callback;
+    StatusCallback status_callback;
+    CodeCallback code_callback;
+    ErrorCallback error_callback;
+    
+    // Threading
+    std::mutex processing_mutex;
+    std::thread learning_thread;
+    std::atomic<bool> should_stop{false};
     
     // Neural network simulation (simplified)
-    QVector<QVector<double>> weights;
-    QVector<double> biases;
-    int inputSize;
-    int hiddenSize;
-    int outputSize;
+    std::vector<std::vector<double>> weights;
+    std::vector<double> biases;
+    int input_size;
+    int hidden_size;
+    int output_size;
     
-    void initializeNeuralNetwork();
-    QVector<double> forwardPass(const QVector<double> &input);
-    void backpropagate(const QVector<double> &input, const QVector<double> &target);
+    void initialize_neural_network();
+    std::vector<double> forward_pass(const std::vector<double> &input);
+    void backpropagate(const std::vector<double> &input, const std::vector<double> &target);
     double sigmoid(double x);
-    double sigmoidDerivative(double x);
+    double sigmoid_derivative(double x);
+    
+    // Helper methods
+    void emit_response(const std::string &response);
+    void emit_progress(int progress);
+    void emit_status(const std::string &status);
+    void emit_code(const std::string &code);
+    void emit_error(const std::string &error);
 };
 
 #endif // AIENGINE_H

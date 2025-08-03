@@ -1,109 +1,247 @@
-#include <QtWidgets/QApplication>
-#include <QtCore/QDir>
-#include <QtCore/QStandardPaths>
-#include <QtCore/QLoggingCategory>
-#include <QtWidgets/QMessageBox>
-#include <QtWidgets/QStyleFactory>
-#include <QtGui/QPalette>
-#include <QtCore/QTranslator>
+#include <gtkmm.h>
+#include <iostream>
+#include <memory>
+#include <filesystem>
+#include <curl/curl.h>
 
 #include "MainWindow.h"
 
-void setupLogging()
+class AIAssistantApplication : public Gtk::Application
 {
-    QLoggingCategory::setFilterRules("qt.network.ssl.debug=false");
-}
+public:
+    AIAssistantApplication() : Gtk::Application("org.aiassistant.app") {}
 
-void setupApplicationStyle(QApplication &app)
-{
-    // Set modern dark theme
-    app.setStyle(QStyleFactory::create("Fusion"));
-    
-    QPalette darkPalette;
-    darkPalette.setColor(QPalette::Window, QColor(53, 53, 53));
-    darkPalette.setColor(QPalette::WindowText, Qt::white);
-    darkPalette.setColor(QPalette::Base, QColor(25, 25, 25));
-    darkPalette.setColor(QPalette::AlternateBase, QColor(53, 53, 53));
-    darkPalette.setColor(QPalette::ToolTipBase, Qt::white);
-    darkPalette.setColor(QPalette::ToolTipText, Qt::white);
-    darkPalette.setColor(QPalette::Text, Qt::white);
-    darkPalette.setColor(QPalette::Button, QColor(53, 53, 53));
-    darkPalette.setColor(QPalette::ButtonText, Qt::white);
-    darkPalette.setColor(QPalette::BrightText, Qt::red);
-    darkPalette.setColor(QPalette::Link, QColor(42, 130, 218));
-    darkPalette.setColor(QPalette::Highlight, QColor(42, 130, 218));
-    darkPalette.setColor(QPalette::HighlightedText, Qt::black);
-    
-    app.setPalette(darkPalette);
-}
+protected:
+    void on_activate() override {
+        try {
+            auto window = std::make_unique<MainWindow>();
+            add_window(*window);
+            
+            // Initialize the window
+            window->initialize();
+            window->present();
+            
+            // Keep window alive
+            m_window = std::move(window);
+            
+        } catch (const std::exception& e) {
+            std::cerr << "Chyba pri vytváraní okna: " << e.what() << std::endl;
+            quit();
+        }
+    }
 
-void createDataDirectories()
-{
-    QString appDataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-    QDir dataDir;
-    
-    if (!dataDir.exists(appDataPath)) {
-        dataDir.mkpath(appDataPath);
+    void on_startup() override {
+        Gtk::Application::on_startup();
+        
+        // Setup application-wide styling
+        setup_styling();
+        
+        // Create data directories
+        create_data_directories();
+        
+        std::cout << "AI Assistant - Inteligentný Asistent v1.0" << std::endl;
+        std::cout << "Inicializujem aplikáciu..." << std::endl;
+    }
+
+    void on_shutdown() override {
+        std::cout << "Ukončujem AI Assistant..." << std::endl;
+        Gtk::Application::on_shutdown();
+    }
+
+private:
+    void setup_styling() {
+        auto css_provider = Gtk::CssProvider::create();
+        
+        // Dark theme CSS
+        std::string css_data = R"(
+            window {
+                background-color: #2b2b2b;
+                color: #ffffff;
+            }
+            
+            .dark-theme {
+                background-color: #1e1e1e;
+                color: #ffffff;
+            }
+            
+            .chat-display {
+                background-color: #1e1e1e;
+                color: #ffffff;
+                font-family: 'Consolas', 'DejaVu Sans Mono', monospace;
+                font-size: 11pt;
+                padding: 10px;
+            }
+            
+            .code-editor {
+                background-color: #1e1e1e;
+                color: #dcdcdc;
+                font-family: 'Consolas', 'DejaVu Sans Mono', monospace;
+                font-size: 11pt;
+                padding: 10px;
+            }
+            
+            .code-output {
+                background-color: #0c0c0c;
+                color: #00ff00;
+                font-family: 'Consolas', 'DejaVu Sans Mono', monospace;
+                font-size: 10pt;
+                padding: 8px;
+            }
+            
+            .message-entry {
+                background-color: #2d2d2d;
+                color: #ffffff;
+                border: 2px solid #404040;
+                border-radius: 8px;
+                padding: 8px;
+                font-size: 11pt;
+            }
+            
+            .message-entry:focus {
+                border-color: #0078d4;
+            }
+            
+            .send-button {
+                background: linear-gradient(to bottom, #0078d4, #106ebe);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 8px 20px;
+                font-weight: bold;
+            }
+            
+            .send-button:hover {
+                background: linear-gradient(to bottom, #106ebe, #005a9e);
+            }
+            
+            .clear-button {
+                background: linear-gradient(to bottom, #d13438, #b71c1c);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 8px 20px;
+            }
+            
+            .generate-button {
+                background: linear-gradient(to bottom, #16a085, #138d75);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 8px 16px;
+                font-weight: bold;
+            }
+            
+            .execute-button {
+                background: linear-gradient(to bottom, #f39c12, #e67e22);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 8px 16px;
+                font-weight: bold;
+            }
+            
+            .status-label {
+                color: #00aa00;
+                padding: 10px;
+                font-weight: bold;
+            }
+            
+            progressbar {
+                border: 2px solid #404040;
+                border-radius: 8px;
+                background-color: #2d2d2d;
+            }
+            
+            progressbar progress {
+                background-color: #0078d4;
+                border-radius: 6px;
+            }
+            
+            notebook {
+                background-color: #2b2b2b;
+            }
+            
+            notebook tab {
+                background-color: #404040;
+                color: #ffffff;
+                padding: 8px 16px;
+                border-radius: 8px 8px 0 0;
+            }
+            
+            notebook tab:checked {
+                background-color: #0078d4;
+            }
+        )";
+        
+        try {
+            css_provider->load_from_data(css_data);
+            
+            auto display = Gdk::Display::get_default();
+            Gtk::StyleContext::add_provider_for_display(
+                display, css_provider, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+                
+        } catch (const std::exception& e) {
+            std::cerr << "Chyba pri načítavaní CSS: " << e.what() << std::endl;
+        }
     }
     
-    // Create subdirectories for different data types
-    dataDir.mkpath(appDataPath + "/knowledge");
-    dataDir.mkpath(appDataPath + "/conversations");
-    dataDir.mkpath(appDataPath + "/generated_code");
-    dataDir.mkpath(appDataPath + "/learning_data");
-}
-
-int main(int argc, char *argv[])
-{
-    QApplication app(argc, argv);
-    
-    // Set application properties
-    app.setApplicationName("AI Assistant");
-    app.setApplicationVersion("1.0.0");
-    app.setOrganizationName("AI Development Team");
-    app.setApplicationDisplayName("AI Assistant - Inteligentný Asistent");
-    
-    // Setup logging and styling
-    setupLogging();
-    setupApplicationStyle(app);
-    
-    // Create necessary directories
-    createDataDirectories();
-    
-    // Setup translation (Slovak support)
-    QTranslator translator;
-    if (translator.load("aiassistant_sk", ":/translations/")) {
-        app.installTranslator(&translator);
+    void create_data_directories() {
+        try {
+            std::filesystem::path home_dir = std::filesystem::path(std::getenv("HOME"));
+            std::filesystem::path app_data_dir = home_dir / ".local" / "share" / "AI_Assistant";
+            
+            std::filesystem::create_directories(app_data_dir);
+            std::filesystem::create_directories(app_data_dir / "knowledge");
+            std::filesystem::create_directories(app_data_dir / "conversations");
+            std::filesystem::create_directories(app_data_dir / "generated_code");
+            std::filesystem::create_directories(app_data_dir / "learning_data");
+            
+            std::cout << "Dátové adresáre vytvorené v: " << app_data_dir << std::endl;
+            
+        } catch (const std::exception& e) {
+            std::cerr << "Chyba pri vytváraní adresárov: " << e.what() << std::endl;
+        }
     }
     
+    std::unique_ptr<MainWindow> m_window;
+};
+
+void show_welcome_message() {
+    std::cout << "\n=== AI Assistant - Vitajte! ===" << std::endl;
+    std::cout << "Tento asistent dokáže:" << std::endl;
+    std::cout << "• Komunikovať s vami v prirodzenom jazyku" << std::endl;
+    std::cout << "• Generovať kód v rôznych jazykoch" << std::endl;
+    std::cout << "• Učiť sa z vašich interakcií" << std::endl;
+    std::cout << "• Pristupovať na internet pre aktuálne informácie" << std::endl;
+    std::cout << "\nZačnite písaním správy v chat okne." << std::endl;
+    std::cout << "================================\n" << std::endl;
+}
+
+int main(int argc, char* argv[])
+{
     try {
-        // Create and show main window
-        MainWindow window;
-        window.show();
+        // Initialize CURL globally
+        curl_global_init(CURL_GLOBAL_DEFAULT);
         
-        // Show welcome message
-        QMessageBox::information(&window, 
-            "AI Assistant", 
-            "Vitajte v AI Assistentovi!\n\n"
-            "Tento asistent dokáže:\n"
-            "• Komunikovať s vami v prirodzenom jazyku\n"
-            "• Generovať kód v rôznych jazykoch\n"
-            "• Učiť sa z vašich interakcií\n"
-            "• Pristupovať na internet pre aktuálne informácie\n\n"
-            "Začnite písaním správy v chat okne.");
+        // Create and run GTK application
+        auto app = AIAssistantApplication::create();
         
-        return app.exec();
-    }
-    catch (const std::exception &e) {
-        QMessageBox::critical(nullptr, 
-            "Kritická chyba", 
-            QString("Aplikácia sa nemôže spustiť:\n%1").arg(e.what()));
+        // Show welcome message in console
+        show_welcome_message();
+        
+        // Run the application
+        int result = app->run(argc, argv);
+        
+        // Cleanup CURL
+        curl_global_cleanup();
+        
+        return result;
+        
+    } catch (const std::exception& e) {
+        std::cerr << "Kritická chyba: " << e.what() << std::endl;
         return -1;
-    }
-    catch (...) {
-        QMessageBox::critical(nullptr, 
-            "Neznáma chyba", 
-            "Nastala neočakávaná chyba pri spúšťaní aplikácie.");
+    } catch (...) {
+        std::cerr << "Neznáma chyba pri spúšťaní aplikácie." << std::endl;
         return -1;
     }
 }

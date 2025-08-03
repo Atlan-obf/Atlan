@@ -1,69 +1,143 @@
-# 🚀 Quick Start Guide - AI Assistant
+# 🚀 Quick Start Guide - AI Assistant (GTK4 Version)
 
-Tento návod vás rýchlo prevedie inštaláciou a spustením AI Assistenta.
+Tento návod vás rýchlo prevedie inštaláciou a spustením AI Assistenta s **GTK4** - úplne zadarmo!
 
-## ⚡ Rýchla inštalácia (Ubuntu/Debian)
+## ⚡ Super rýchla inštalácia (Ubuntu/Debian)
 
 ```bash
-# 1. Nainštalujte závislosti
+# Jeden príkaz pre všetko!
+./build.sh --install-deps --clean --run
+```
+
+## 🆓 Prečo GTK4?
+
+- ✅ **Úplne zadarmo** - žiadne licenčné poplatky
+- ✅ **Bez obmedzení** - môžete predávať aplikácie
+- ✅ **Moderné GUI** - krásne tmavé rozhranie
+- ✅ **Rýchle** - menšie závislosti, rýchlejší štart
+
+## 📦 Manuálna inštalácia
+
+### Ubuntu/Debian
+```bash
+# 1. Závislosti
 sudo apt update
-sudo apt install -y build-essential cmake git qt6-base-dev qt6-tools-dev libcurl4-openssl-dev
+sudo apt install -y build-essential cmake git pkg-config
+sudo apt install -y libgtk-4-dev libgtkmm-4.0-dev
+sudo apt install -y libcurl4-openssl-dev libjsoncpp-dev
 
-# 2. Klonujte projekt (alebo stiahnite ZIP)
-git clone <repository-url>
-cd AIAssistant
+# 2. Kompilácia
+mkdir build && cd build
+cmake ..
+make -j$(nproc)
 
-# 3. Kompilujte a spustite
+# 3. Spustenie
+./AIAssistant
+```
+
+### Fedora/RHEL
+```bash
+# 1. Závislosti
+sudo dnf install -y gcc-c++ cmake git pkgconfig
+sudo dnf install -y gtk4-devel gtkmm40-devel
+sudo dnf install -y libcurl-devel jsoncpp-devel
+
+# 2. Build
+./build.sh --clean --run
+```
+
+### Arch Linux
+```bash
+# 1. Závislosti
+sudo pacman -S gcc cmake git pkgconf gtk4 gtkmm-4.0 curl jsoncpp
+
+# 2. Build
+./build.sh --clean --run
+```
+
+### macOS
+```bash
+# 1. Homebrew
+brew install cmake pkg-config gtk4 gtkmm4 curl jsoncpp
+
+# 2. Build
 ./build.sh --clean --run
 ```
 
 ## 🎯 Prvé kroky po spustení
 
-### 1. Uvítacia obrazovka
-Po spustení sa zobrazí uvítacia správa s informáciami o funkcionalite.
+### 1. Tmavé GTK4 rozhranie
+Po spustení sa zobrazí elegantné tmavé rozhranie s CSS3 štýlmi.
 
 ### 2. Základné testovanie
-Skúste tieto základné príkazy v chat okne:
+Skúste tieto príkazy v chat okne:
 
 ```
 Ahoj!
-Ako sa máš?
-Vytvor hello world program v C++
+Vytvor hello world v C++
 Napíš kalkulačku
 Generuj Python funkciu
+Ako funguje neurónová sieť?
 ```
 
 ### 3. Navigácia v aplikácii
 - **💬 Chat tab**: Hlavná komunikácia s AI
-- **💻 Kód tab**: Prezeranie a úprava generovaného kódu
+- **💻 Kód tab**: Prezeranie a úprava generovaného kódu  
 - **🧠 Učenie tab**: Sledovanie pokroku učenia AI
 
 ## 🔧 Riešenie problémov
 
-### Aplikácia sa nespustí
+### GTK4 nie je nájdené
 ```bash
-# Skontrolujte závislosti
-ldd build/AIAssistant
+# Ubuntu/Debian
+sudo apt install libgtk-4-dev
 
-# Skontrolujte Qt inštaláciu
-dpkg -l | grep qt6
+# Fedora
+sudo dnf install gtk4-devel
+
+# Arch
+sudo pacman -S gtk4
+
+# Skontrolujte verziu
+pkg-config --modversion gtk4
 ```
 
-### Chyby pri kompilácii
+### gtkmm4 chýba
 ```bash
-# Aktualizujte systém
-sudo apt update && sudo apt upgrade
+# Ubuntu/Debian
+sudo apt install libgtkmm-4.0-dev
 
-# Preinštalujte Qt6
-sudo apt install --reinstall qt6-base-dev qt6-tools-dev
+# Fedora
+sudo dnf install gtkmm40-devel
+
+# Arch
+sudo pacman -S gtkmm-4.0
+
+# Skontrolujte verziu
+pkg-config --modversion gtkmm-4.0
 ```
 
-### Chýbajúce Qt6 (starší Ubuntu)
+### Starší Ubuntu (20.04, 18.04)
 ```bash
-# Pridajte Qt6 PPA
-sudo add-apt-repository ppa:okirby/qt6-backports
-sudo apt update
-sudo apt install qt6-base-dev qt6-tools-dev
+# GTK4 nie je dostupné v starších verziách
+# Aktualizujte na Ubuntu 22.04+ alebo použite Flatpak
+
+# Alternatívne - kompilácia GTK4 zo zdrojov
+wget https://download.gnome.org/sources/gtk/4.0/gtk-4.0.0.tar.xz
+tar -xf gtk-4.0.0.tar.xz
+cd gtk-4.0.0
+meson build
+ninja -C build install
+```
+
+### Windows (MSYS2)
+```bash
+# V MSYS2 termináli
+pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake
+pacman -S mingw-w64-x86_64-gtk4 mingw-w64-x86_64-gtkmm4
+pacman -S mingw-w64-x86_64-curl mingw-w64-x86_64-jsoncpp
+
+./build.sh --clean
 ```
 
 ## 🎨 Prvé použitie
@@ -120,11 +194,11 @@ AI: [Prevedie príklady do JavaScript]
 - **Používajte kontext**: AI si pamätá predchádzajúcu konverzáciu
 - **Experimentujte**: Skúšajte rôzne formulácie
 
-### Klávesové skratky
-- **Enter**: Odoslať správu
-- **Ctrl+Enter**: Nový riadok v správe
-- **Ctrl+S**: Uložiť konverzáciu
-- **Ctrl+L**: Vymazať chat
+### GTK4 špecifické funkcie
+- **Tmavý motív**: Automaticky detekovaný
+- **CSS štýlovanie**: Prispôsobiteľné vzhľady
+- **Natívny vzhľad**: Integrácia so systémom
+- **Rýchly štart**: Menšie závislosti
 
 ### Pokročilé funkcie
 - **Kontextové učenie**: AI sa prispôsobuje vášmu štýlu
@@ -142,16 +216,16 @@ git pull origin main
 ### Vymazanie dát
 ```bash
 # Vymazať učebné dáta (resetuje AI)
-rm -rf ~/.local/share/AI\ Development\ Team/AI\ Assistant/
+rm -rf ~/.local/share/AI_Assistant/
 
 # Vymazať iba konverzácie
-rm -rf ~/.local/share/AI\ Development\ Team/AI\ Assistant/conversations/
+rm -rf ~/.local/share/AI_Assistant/conversations/
 ```
 
 ### Záloha dát
 ```bash
 # Záloha učebných dát
-cp -r ~/.local/share/AI\ Development\ Team/AI\ Assistant/ ~/ai_assistant_backup/
+cp -r ~/.local/share/AI_Assistant/ ~/ai_assistant_backup/
 ```
 
 ## 🆘 Podpora
@@ -163,20 +237,56 @@ cp -r ~/.local/share/AI\ Development\ Team/AI\ Assistant/ ~/ai_assistant_backup/
 
 ### Časté otázky
 
+**Q: Prečo GTK4 namiesto Qt6?**
+A: GTK4 je úplne zadarmo bez licenčných obmedzení, menšie závislosti, rýchlejší štart.
+
 **Q: AI nedáva zmysluplné odpovede**
 A: AI potrebuje čas na učenie. Pokračujte v konverzácii a postupne sa zlepší.
 
 **Q: Aplikácia je pomalá**
-A: Skontrolujte internetové pripojenie a dostupnú RAM.
+A: GTK4 verzia by mala byť rýchlejšia. Skontrolujte internetové pripojenie a RAM.
 
 **Q: Kód sa nekompiluje**
-A: Skontrolujte, či máte nainštalované potrebné kompilátory a knižnice.
+A: Skontrolujte, či máte nainštalované GTK4, gtkmm4, libcurl a jsoncpp.
 
 **Q: Chcem pridať nový programovací jazyk**
 A: Pozrite si sekciu "Prispôsobenie" v README.md
+
+**Q: Môžem predávať aplikácie vytvorené s týmto nástrojom?**
+A: Áno! GTK4 a všetky závislosti sú pod LGPL licenciou - žiadne obmedzenia.
+
+## 🆚 Porovnanie s Qt6 verziou
+
+| Vlastnosť | GTK4 Verzia | Qt6 Verzia |
+|-----------|-------------|------------|
+| **Licencia** | ✅ Zadarmo | ⚠️ Komerčné poplatky |
+| **Veľkosť** | ~50MB | ~200MB+ |
+| **Štart** | Rýchly | Pomalší |
+| **Vzhľad** | Natívny GTK | Qt štýl |
+| **Nasadenie** | Jednoduché | Licenčné problémy |
+
+## 🎉 Výhody GTK4 verzie
+
+### ✅ **Licenčné**
+- Žiadne poplatky
+- Žiadne obmedzenia na predaj
+- Open source bez "skrytých nákladov"
+
+### ✅ **Technické**
+- Menšie závislosti
+- Rýchlejší štart
+- Lepšia integrácia so systémom
+- Moderné CSS3 štýlovanie
+
+### ✅ **Vývojárske**
+- Žiadne obavy z licencií
+- Jednoduchšie nasadenie
+- Menšie distribučné balíčky
 
 ---
 
 **Úspešné spustenie! 🎉**
 
-Teraz môžete začať experimentovať s AI Assistentom. Pamätajte, že AI sa učí z každej interakcie, takže čím viac ho používate, tým lepší sa stane!
+**🆓 Teraz môžete začať experimentovať s AI Assistentom - úplne zadarmo a bez licenčných obmedzení!**
+
+Pamätajte, že AI sa učí z každej interakcie, takže čím viac ho používate, tým lepší sa stane!

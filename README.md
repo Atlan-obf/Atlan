@@ -1,6 +1,14 @@
-# AI Assistant - Inteligentný Asistent
+# AI Assistant - Inteligentný Asistent (GTK4 Version)
 
-Pokročilý AI asistent napísaný v C++ s použitím Qt6, ktorý dokáže komunikovať, učiť sa a generovať kód.
+Pokročilý AI asistent napísaný v C++ s použitím **GTK4/gtkmm4** - kompletne zadarmo a bez licenčných obmedzení! Dokáže komunikovať, učiť sa a generovať kód.
+
+## 🆓 **Prečo GTK4 namiesto Qt6?**
+
+- ✅ **Úplne zadarmo** - žiadne licenčné poplatky ani obmedzenia
+- ✅ **Open Source** - LGPL licencia bez komerčných obmedzení  
+- ✅ **Moderné GUI** - GTK4 je najnovšia verzia s krásnym dizajnom
+- ✅ **Cross-platform** - funguje na Linux, Windows, macOS
+- ✅ **Ľahšie nasadenie** - žiadne obavy z licenčných problémov
 
 ## 🚀 Funkcie
 
@@ -22,8 +30,8 @@ Pokročilý AI asistent napísaný v C++ s použitím Qt6, ktorý dokáže komun
 - **AI API podpora**: Podpora pre OpenAI API (voliteľné)
 - **GitHub integrácia**: Sťahovanie kódu z GitHub repozitárov
 
-### 🎨 Moderné GUI
-- **Tmavý motív**: Elegantné tmavé rozhranie
+### 🎨 Moderné GUI (GTK4)
+- **Tmavý motív**: Elegantné tmavé rozhranie s CSS3 štýlmi
 - **Záložkové rozhranie**: Chat, Kód, Učenie
 - **Responzívny dizajn**: Prispôsobuje sa veľkosti okna
 - **Slovenská lokalizácia**: Kompletne v slovenskom jazyku
@@ -35,23 +43,28 @@ Pokročilý AI asistent napísaný v C++ s použitím Qt6, ktorý dokáže komun
 - **Kompilátor**: GCC 8+, Clang 10+, alebo MSVC 2019+
 - **CMake**: 3.16 alebo novší
 
-### Závislosti
-- **Qt6**: Core, Widgets, Network moduly
+### Závislosti (všetky zadarmo!)
+- **GTK4**: Moderný GUI toolkit
+- **gtkmm4**: C++ wrapper pre GTK4
 - **libcurl**: Pre HTTP požiadavky
+- **jsoncpp**: Pre JSON spracovanie
 - **C++17**: Štandardná knižnica
 
 ## 🛠️ Inštalácia
 
-### Ubuntu/Debian
+### Ubuntu/Debian (Najjednoduchšie)
+```bash
+# Automatická inštalácia všetkých závislostí a kompilácia
+./build.sh --install-deps --clean --run
+```
+
+### Manuálna inštalácia Ubuntu/Debian
 ```bash
 # Inštalácia závislostí
 sudo apt update
-sudo apt install build-essential cmake git
-sudo apt install qt6-base-dev qt6-tools-dev libcurl4-openssl-dev
-
-# Klonovanie repozitára
-git clone <repository-url>
-cd AIAssistant
+sudo apt install -y build-essential cmake git pkg-config
+sudo apt install -y libgtk-4-dev libgtkmm-4.0-dev
+sudo apt install -y libcurl4-openssl-dev libjsoncpp-dev
 
 # Kompilácia
 mkdir build && cd build
@@ -62,19 +75,37 @@ make -j$(nproc)
 ./AIAssistant
 ```
 
-### Windows (MSYS2/MinGW)
+### Fedora/RHEL/CentOS
+```bash
+# Inštalácia závislostí
+sudo dnf install -y gcc-c++ cmake git pkgconfig
+sudo dnf install -y gtk4-devel gtkmm40-devel
+sudo dnf install -y libcurl-devel jsoncpp-devel
+
+# Kompilácia
+./build.sh --clean
+```
+
+### Arch Linux
+```bash
+# Inštalácia závislostí
+sudo pacman -S gcc cmake git pkgconf
+sudo pacman -S gtk4 gtkmm-4.0
+sudo pacman -S curl jsoncpp
+
+# Kompilácia
+./build.sh --clean
+```
+
+### Windows (MSYS2)
 ```bash
 # V MSYS2 termináli
 pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake
-pacman -S mingw-w64-x86_64-qt6 mingw-w64-x86_64-curl
+pacman -S mingw-w64-x86_64-gtk4 mingw-w64-x86_64-gtkmm4
+pacman -S mingw-w64-x86_64-curl mingw-w64-x86_64-jsoncpp
 
 # Kompilácia
-mkdir build && cd build
-cmake .. -G "MinGW Makefiles"
-mingw32-make
-
-# Spustenie
-./AIAssistant.exe
+./build.sh --clean
 ```
 
 ### macOS
@@ -83,21 +114,16 @@ mingw32-make
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 # Inštalácia závislostí
-brew install cmake qt6 curl
+brew install cmake pkg-config gtk4 gtkmm4 curl jsoncpp
 
 # Kompilácia
-mkdir build && cd build
-cmake ..
-make -j$(sysctl -n hw.ncpu)
-
-# Spustenie
-./AIAssistant
+./build.sh --clean
 ```
 
 ## 🎯 Použitie
 
 ### Prvé spustenie
-1. **Spustite aplikáciu** - Zobrazí sa uvítacia správa
+1. **Spustite aplikáciu** - Zobrazí sa tmavé GTK4 rozhranie
 2. **Internetové pripojenie** - Aplikácia automaticky kontroluje pripojenie
 3. **Začnite konverzáciu** - Napíšte správu do chat okna
 
@@ -120,12 +146,6 @@ Príklady požiadaviek:
 - "Vytvor jednoduchy hello world program"
 ```
 
-### Učenie a adaptácia
-- AI si pamätá predchádzajúce konverzácie
-- Učí sa z vašich reakcií a preferencií
-- Postupne zlepšuje kvalitu odpovední
-- Rozpoznáva nové vzory v komunikácii
-
 ## 🏗️ Architektúra
 
 ### Hlavné komponenty
@@ -135,10 +155,11 @@ Príklady požiadaviek:
 - Spracovanie prirodzeného jazyka
 - Neurónová sieť a rozhodovanie
 - Kontextová pamäť
+- **Callback systém** namiesto Qt signals/slots
 
 #### NetworkManager (`src/NetworkManager.cpp`)
 - Správa internetového pripojenia
-- HTTP/HTTPS požiadavky
+- **libcurl** pre HTTP/HTTPS požiadavky
 - API integrácie
 - Sťahovanie obsahu
 
@@ -155,48 +176,46 @@ Príklady požiadaviek:
 - Samooptimalizácia
 
 #### MainWindow (`src/MainWindow.cpp`)
-- Grafické používateľské rozhanie
+- **GTK4/gtkmm4** grafické používateľské rozhranie
 - Event handling
-- UI komponenty
+- UI komponenty s CSS štýlmi
 - Vizualizácia dát
 
-### Dátové štruktúry
+### Technické detaily
 ```cpp
-// Učebné dáta
-struct LearningData {
-    QString input;      // Vstup od používateľa
-    QString output;     // Odpoveď AI
-    QString context;    // Kontext konverzácie
-    double reward;      // Hodnotenie kvality
-    qint64 timestamp;   // Časová pečiatka
-    QString category;   // Kategória vzoru
-};
+// GTK4 widgets namiesto Qt
+Gtk::ApplicationWindow     // namiesto QMainWindow
+Gtk::TextView             // namiesto QTextEdit
+Gtk::Entry               // namiesto QLineEdit
+Gtk::Button              // namiesto QPushButton
+Gtk::Notebook            // namiesto QTabWidget
 
-// Šablóna kódu
-struct CodeTemplate {
-    QString language;       // Programovací jazyk
-    QString pattern;        // Rozpoznávací vzor
-    QString template_code;  // Šablóna kódu
-    QStringList variables;  // Premenné na nahradenie
-    QString description;    // Popis šablóny
-};
+// Callback systém namiesto signals/slots
+using ResponseCallback = std::function<void(const std::string&)>;
+void set_response_callback(ResponseCallback callback);
+
+// libcurl namiesto QNetworkAccessManager
+CURL* curl_handle;
+static size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::string* userp);
+
+// jsoncpp namiesto QJsonDocument
+Json::Value root;
+Json::Reader reader;
 ```
 
 ## 🔧 Konfigurácia
 
 ### Nastavenie API kľúčov
-Pre plnú funkcionalitu môžete nastaviť API kľúče:
-
 ```cpp
 // V main.cpp alebo cez GUI
-networkManager->setApiKey("your-openai-api-key");
+network_manager->set_api_key("your-openai-api-key");
 ```
 
 ### Dátové súbory
 Aplikácia ukladá dáta do:
-- **Linux**: `~/.local/share/AI Development Team/AI Assistant/`
-- **Windows**: `%APPDATA%/AI Development Team/AI Assistant/`
-- **macOS**: `~/Library/Application Support/AI Development Team/AI Assistant/`
+- **Linux**: `~/.local/share/AI_Assistant/`
+- **Windows**: `%APPDATA%/AI_Assistant/`
+- **macOS**: `~/Library/Application Support/AI_Assistant/`
 
 ### Súbory:
 - `knowledge.json` - Vedomostná báza AI
@@ -206,62 +225,78 @@ Aplikácia ukladá dáta do:
 
 ## 🎨 Prispôsobenie
 
+### CSS štýly (GTK4)
+```css
+/* V src/main.cpp */
+.chat-display {
+    background-color: #1e1e1e;
+    color: #ffffff;
+    font-family: 'Consolas', 'DejaVu Sans Mono', monospace;
+}
+
+.send-button {
+    background: linear-gradient(to bottom, #0078d4, #106ebe);
+    border-radius: 8px;
+}
+```
+
 ### Pridanie nových jazykov
 ```cpp
-// V CodeGenerator::generateCode()
+// V CodeGenerator::generate_code()
 else if (language == "rust" || description.contains("rust")) {
-    result.code = generateRustCode(description);
+    result.code = generate_rust_code(description);
     result.language = "rust";
 }
 ```
 
-### Nové šablóny kódu
-```cpp
-CodeTemplate rustTemplate;
-rustTemplate.language = "rust";
-rustTemplate.pattern = "hello.*world";
-rustTemplate.template_code = 
-    "fn main() {\n"
-    "    println!(\"Hello World!\");\n"
-    "}";
-templates.append(rustTemplate);
-```
+## 🆚 Porovnanie s Qt6 verziou
 
-### Vlastné vzory učenia
-```cpp
-// V LearningModule::analyzeCategory()
-else if (lowerInput.contains("rust")) {
-    return "rust_programming";
-}
-```
+| Vlastnosť | GTK4 Verzia | Qt6 Verzia |
+|-----------|-------------|------------|
+| **Licencia** | ✅ Úplne zadarmo | ⚠️ Komerčné obmedzenia |
+| **Závislosti** | GTK4, libcurl, jsoncpp | Qt6 (veľké) |
+| **Veľkosť** | ~50MB | ~200MB+ |
+| **Nasadenie** | Jednoduché | Licenčné problémy |
+| **Výkon** | Rýchly štart | Pomalší štart |
+| **Vzhľad** | Natívny GTK | Qt štýl |
 
 ## 🐛 Riešenie problémov
 
 ### Časté problémy
 
-#### Aplikácia sa nespustí
+#### GTK4 nie je nájdené
 ```bash
-# Skontrolujte závislosti
-ldd ./AIAssistant  # Linux
-otool -L ./AIAssistant  # macOS
+# Ubuntu/Debian
+sudo apt install libgtk-4-dev
 
-# Skontrolujte Qt inštaláciu
-qmake --version
+# Fedora
+sudo dnf install gtk4-devel
+
+# Arch
+sudo pacman -S gtk4
+```
+
+#### gtkmm4 chýba
+```bash
+# Ubuntu/Debian
+sudo apt install libgtkmm-4.0-dev
+
+# Fedora  
+sudo dnf install gtkmm40-devel
+
+# Arch
+sudo pacman -S gtkmm-4.0
 ```
 
 #### Chyby pri kompilácii
 ```bash
-# Aktualizujte CMake
-cmake --version  # Malo by byť 3.16+
+# Skontrolujte verzie
+pkg-config --modversion gtk4
+pkg-config --modversion gtkmm-4.0
 
-# Skontrolujte C++17 podporu
-g++ --version  # Malo by byť 8+
+# Aktualizujte systém
+sudo apt update && sudo apt upgrade
 ```
-
-#### Problémy s pripojením
-- Skontrolujte firewall nastavenia
-- Overte internetové pripojenie
-- Skontrolujte proxy nastavenia
 
 ### Debug režim
 ```bash
@@ -269,25 +304,29 @@ g++ --version  # Malo by byť 8+
 cmake .. -DCMAKE_BUILD_TYPE=Debug
 make
 
-# Spustenie s debug výstupom
-QT_LOGGING_RULES="*.debug=true" ./AIAssistant
+# GTK debug informácie
+GTK_DEBUG=interactive ./AIAssistant
 ```
 
-## 📈 Budúce vylepšenia
+## 📈 Výhody GTK4 verzie
 
-### V pláne
-- [ ] **Pokročilejšia neurónová sieť** - Hlboké učenie
-- [ ] **Viac programovacích jazykov** - Rust, Go, Swift
-- [ ] **Hlasové rozhranie** - Speech-to-text a text-to-speech
-- [ ] **Plugin systém** - Rozšíriteľnosť cez pluginy
-- [ ] **Databázová podpora** - SQLite integrácia
-- [ ] **Cloudová synchronizácia** - Synchronizácia naprieč zariadeniami
+### ✅ **Licenčné výhody**
+- Žiadne komerčné poplatky
+- Žiadne obmedzenia na distribúciu
+- Môžete predávať aplikácie bez problémov
+- Open source bez "hidden costs"
 
-### Možné rozšírenia
-- **IDE integrácia** - Plugin pre VS Code, Qt Creator
-- **Web verzia** - Browser-based verzia
-- **Mobilná aplikácia** - Android/iOS verzia
-- **API server** - REST API pre externé aplikácie
+### ✅ **Technické výhody**
+- Menšie závislosti
+- Rýchlejší štart aplikácie
+- Natívny vzhľad na Linux
+- Lepšia integrácia so systémom
+
+### ✅ **Vývojárske výhody**
+- Žiadne obavy z licenčných problémov
+- Jednoduchšie nasadenie
+- Menšie balíčky na distribúciu
+- Viac kontroly nad UI
 
 ## 🤝 Prispievanie
 
@@ -302,13 +341,15 @@ Vítame príspevky od komunity!
 
 ### Kódové štandardy
 - **C++17** štandard
-- **Qt coding style** pre Qt špecifický kód
+- **GTK4/gtkmm4** coding style
 - **Komentáre v slovenčine** pre dokumentáciu
 - **Unit testy** pre nové funkcionality
 
 ## 📄 Licencia
 
 Tento projekt je licencovaný pod MIT licenciou - pozrite súbor [LICENSE](LICENSE) pre detaily.
+
+**GTK4/gtkmm4 sú licencované pod LGPL** - môžete ich používať vo vlastných projektoch bez obmedzení.
 
 ## 👨‍💻 Autori
 
@@ -317,13 +358,16 @@ Tento projekt je licencovaný pod MIT licenciou - pozrite súbor [LICENSE](LICEN
 
 ## 🙏 Poďakovanie
 
-- **Qt Framework** - Za skvelý GUI framework
-- **OpenAI** - Za inšpiráciu v oblasti AI
-- **DuckDuckGo** - Za verejné API
+- **GTK Project** - Za skvelý GUI framework
+- **gtkmm Project** - Za C++ wrapper
+- **libcurl** - Za sieťové funkcie
+- **jsoncpp** - Za JSON spracovanie
 - **Komunita** - Za spätnú väzbu a návrhy
 
 ---
 
 **Vytvorené s ❤️ pre slovenskú programátorskú komunitu**
+
+**🆓 Úplne zadarmo - žiadne licenčné problémy!**
 
 Pre viac informácií navštívte našu [dokumentáciu](docs/) alebo kontaktujte tím cez [Issues](../../issues).

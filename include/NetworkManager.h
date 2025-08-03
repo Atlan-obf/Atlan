@@ -1,77 +1,110 @@
 #ifndef NETWORKMANAGER_H
 #define NETWORKMANAGER_H
 
-#include <QtCore/QObject>
-#include <QtCore/QString>
-#include <QtCore/QUrl>
-#include <QtCore/QTimer>
-#include <QtNetwork/QNetworkAccessManager>
-#include <QtNetwork/QNetworkRequest>
-#include <QtNetwork/QNetworkReply>
-#include <QtCore/QJsonDocument>
-#include <QtCore/QJsonObject>
+#include <string>
+#include <map>
+#include <vector>
+#include <memory>
+#include <functional>
+#include <thread>
+#include <mutex>
+#include <atomic>
+#include <curl/curl.h>
+#include <json/json.h>
 
-class NetworkManager : public QObject
+class NetworkManager
 {
-    Q_OBJECT
-
 public:
-    explicit NetworkManager(QObject *parent = nullptr);
+    // Callback types
+    using ConnectionCallback = std::function<void(bool)>;
+    using ResponseCallback = std::function<void(const std::string&)>;
+    using SearchCallback = std::function<void(const Json::Value&)>;
+    using AIResponseCallback = std::function<void(const std::string&)>;
+    using DownloadCallback = std::function<void(const std::string&)>;
+    using UploadCallback = std::function<void(bool)>;
+    using ErrorCallback = std::function<void(const std::string&)>;
+
+    explicit NetworkManager();
     ~NetworkManager();
     
     // Connection management
-    void checkInternetConnection();
-    bool isConnected() const;
-    void setApiKey(const QString &key);
+    void check_internet_connection();
+    bool is_connected() const;
+    void set_api_key(const std::string &key);
+    
+    // Callback setters
+    void set_connection_callback(ConnectionCallback callback);
+    void set_response_callback(ResponseCallback callback);
+    void set_search_callback(SearchCallback callback);
+    void set_ai_response_callback(AIResponseCallback callback);
+    void set_download_callback(DownloadCallback callback);
+    void set_upload_callback(UploadCallback callback);
+    void set_error_callback(ErrorCallback callback);
     
     // API calls
-    void searchWeb(const QString &query);
-    void queryAI(const QString &prompt, const QString &context = "");
-    void downloadCode(const QString &repository);
-    void uploadLearningData(const QJsonObject &data);
+    void search_web(const std::string &query);
+    void query_ai(const std::string &prompt, const std::string &context = "");
+    void download_code(const std::string &repository);
+    void upload_learning_data(const Json::Value &data);
     
     // Custom requests
-    void makeRequest(const QUrl &url, const QString &method = "GET", 
-                    const QJsonObject &data = QJsonObject());
-    void makePostRequest(const QUrl &url, const QJsonObject &data);
-    void makeGetRequest(const QUrl &url);
-
-signals:
-    void connectionStatusChanged(bool connected);
-    void responseReceived(const QString &response);
-    void searchResultsReady(const QJsonObject &results);
-    void aiResponseReady(const QString &response);
-    void downloadComplete(const QString &content);
-    void uploadComplete(bool success);
-    void errorOccurred(const QString &error);
-
-private slots:
-    void onNetworkReplyFinished();
-    void onConnectionTimeout();
-    void checkConnectionStatus();
+    void make_request(const std::string &url, const std::string &method = "GET", 
+                     const Json::Value &data = Json::Value());
+    void make_post_request(const std::string &url, const Json::Value &data);
+    void make_get_request(const std::string &url);
 
 private:
-    void setupNetworkManager();
-    void handleNetworkError(QNetworkReply::NetworkError error);
-    QString formatApiRequest(const QString &prompt, const QString &context);
-    QJsonObject parseResponse(const QByteArray &data);
+    // CURL callback function
+    static size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::string* userp);
     
-    QNetworkAccessManager *networkManager;
-    QTimer *connectionTimer;
+    void setup_curl();
+    void cleanup_curl();
+    void handle_network_error(CURLcode error);
+    std::string format_api_request(const std::string &prompt, const std::string &context);
+    Json::Value parse_response(const std::string &data);
+    std::string format_search_results(const Json::Value &results);
     
-    bool connected;
-    QString apiKey;
-    QString userAgent;
+    // Threading functions
+    void connection_check_loop();
+    void process_request_queue();
+    
+    struct Request {
+        std::string url;
+        std::string method;
+        Json::Value data;
+        std::string type;
+        std::function<void(const std::string&)> callback;
+    };
+    
+    CURL* curl_handle;
+    std::atomic<bool> connected{false};
+    std::string api_key;
+    std::string user_agent;
     
     // API endpoints
-    QString searchApiUrl;
-    QString aiApiUrl;
-    QString codeApiUrl;
+    std::string search_api_url;
+    std::string ai_api_url;
+    std::string code_api_url;
+    
+    // Callbacks
+    ConnectionCallback connection_callback;
+    ResponseCallback response_callback;
+    SearchCallback search_callback;
+    AIResponseCallback ai_response_callback;
+    DownloadCallback download_callback;
+    UploadCallback upload_callback;
+    ErrorCallback error_callback;
+    
+    // Threading
+    std::thread connection_thread;
+    std::thread request_thread;
+    std::mutex request_mutex;
+    std::vector<Request> request_queue;
+    std::atomic<bool> should_stop{false};
     
     // Request tracking
-    QMap<QNetworkReply*, QString> pendingRequests;
-    int maxRetries;
-    int currentRetries;
+    int max_retries;
+    int current_retries;
 };
 
 #endif // NETWORKMANAGER_H
