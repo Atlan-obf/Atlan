@@ -1,0 +1,110 @@
+# Build directories
+build/
+build-*/
+debug/
+release/
+Debug/
+Release/
+bin/
+lib/
+obj/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+cmake_install.cmake
+Makefile
+cmake-build-*/
+*.cmake
+
+# Qt specific
+*.pro.user
+*.pro.user.*
+moc_*.cpp
+qrc_*.cpp
+ui_*.h
+*.qm
+*.prl
+.qmake.cache
+.qmake.stash
+*.autosave
+
+# C++ compiled files
+*.o
+*.obj
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.out
+*.app
+*.a
+*.lib
+
+# IDE files
+.vscode/
+.vs/
+*.vcxproj*
+*.sln
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.idea/
+*.iml
+*.ipr
+*.iws
+.project
+.cproject
+.settings/
+
+# Qt Creator
+CMakeLists.txt.user*
+
+# Temporary files
+*~
+*.tmp
+*.temp
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Log files
+*.log
+
+# Package files
+*.tar.gz
+*.zip
+*.rar
+*.7z
+
+# Application data
+knowledge.json
+learning_data.json
+conversations/
+generated_code/
+
+# Backup files
+*.bak
+*.backup
+*.orig
+
+# Core dumps
+core
+core.*
+
+# Profiling data
+*.gcda
+*.gcno
+*.gcov
+
+# Valgrind
+*.memcheck
+*.helgrind
+*.drd
+*.massif
+*.cachegrind
